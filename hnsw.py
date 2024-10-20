@@ -77,7 +77,6 @@ class HNSW:
         idx = len(data)
         data.append(elem)
 
-
         if point is not None:  # the HNSW is not empty, we have an entry point
             dist = distance(elem, data[point])
             # for all levels in which we dont have to insert elem,
@@ -99,15 +98,16 @@ class HNSW:
                 # layer[idx] = layer_idx = {}
                 # self._select(layer_idx, ep, level_m, layer, heap=True)
 
-                neighbors = self.neighborhood_construction(candidates=candidates, curr=idx, k=level_m, distance_func=self.distance_func, data=self.data)
+                neighbors = self.neighborhood_construction(candidates=candidates, curr=idx, k=level_m,
+                                                           distance_func=self.distance_func, data=self.data)
                 layer[idx] = neighbors
                 # insert backlinks to the new node
                 for j, dist in neighbors:
                     candidates_j = layer[j] + [(idx, dist)]
-                    neighbors_j = self.neighborhood_construction(candidates=candidates_j, curr=j, k=level_m, distance_func=self.distance_func, data=self.data)
+                    neighbors_j = self.neighborhood_construction(candidates=candidates_j, curr=j, k=level_m,
+                                                                 distance_func=self.distance_func, data=self.data)
                     layer[j] = neighbors_j
-                    
-                
+
         for i in range(len(graphs), level):
             # for all new levels, we create an empty graph
             graphs.append({idx: []})
