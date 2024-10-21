@@ -11,6 +11,8 @@ import itertools
 random.seed(108)
 from modified_hnsw import HNSW
 from modified_hnsw import l2_distance, recursive_heuristic as heuristic
+import matplotlib.pyplot as plt
+import pickle
 
 
 def brute_force_knn_search(distance_func, k, q, data):
@@ -105,13 +107,44 @@ def main():
 
     hnsw = HNSW( distance_func=l2_distance, m=args.M, m0=args.M0, ef=10, ef_construction=30,
                  neighborhood_construction=heuristic)
+
     # Add data to HNSW
     for x in tqdm(train_data):
         hnsw.add(x)
+#
+    #with open('hnsw_my_non_diff.pickle', 'wb') as fout:
+    #    pickle.dump(hnsw, fout)
+
+    #with open('hnsw_base.pickle', 'rb') as fout:
+    #    hnsw = pickle.load(fout)
 
     # Calculate recall
-    recall, avg_cal = calculate_recall(l2_distance, hnsw, test_data, groundtruth_data, k=args.k, ef=args.ef, m=args.m)
-    print(f"Average recall: {recall}, avg calc: {avg_cal}")
+    recalls = []
+    avg_cals = []
+    efs = list(range(5, 50, 1))
+    for ef in efs:
+        recall, avg_cal = calculate_recall(l2_distance, hnsw, test_data, groundtruth_data, k=args.k, ef=ef, m=args.m)
+        recalls.append(recall)
+        avg_cals.append(avg_cal)
+        print(f"Average recall: {recall}, avg calc: {avg_cal}")
+
+    with open('recalls_my_div_10_recursive_2.txt', 'w') as fout:
+        print(recalls, file=fout)
+    with open('avg_cals_my_div_10_recursive_2.txt', 'w') as fout:
+        print(avg_cals, file=fout)
+
+    #fig, axes = plt.subplots(1, 2, figsize=(25, 5))
+#
+    #axes[0].plot(efs, recalls)
+    #axes[0].set_xlabel('EF')
+    #axes[0].set_ylabel('Recall')
+#
+    #axes[1].plot(efs, avg_cals)
+    #axes[1].set_xlabel('EF')
+    #axes[1].set_ylabel('Avg Calls')
+#
+    #plt.show()
+
 
 if __name__ == "__main__":
     main()

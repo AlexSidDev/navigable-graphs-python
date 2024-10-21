@@ -9,7 +9,7 @@ import itertools
 import pickle
 
 random.seed(108)
-from hnsw import HNSW
+from hnsw_fast import HNSW
 from hnsw import l2_distance, heuristic
 
 
@@ -33,9 +33,9 @@ def read_fbin(filename, start_idx=0, chunk_size=None):
 
 def filter_verts(candidates, verts):
     filtered = []
-    for candidate in candidates:
-        if candidate[0] in verts:
-            filtered.append(candidate[0])
+    for candidate in candidates.keys():
+        if candidate in verts:
+            filtered.append(candidate)
     return filtered
 
 
@@ -96,8 +96,8 @@ def main():
     parser.add_argument('--dataset', default='base.10M.fbin',
                         help="Path to dataset file in .fbin format")
     parser.add_argument('--K', type=int, default=5, help='The size of the neighbourhood')
-    parser.add_argument('--M', type=int, default=50, help='Avg number of neighbors')
-    parser.add_argument('--M0', type=int, default=64, help='Avg number of neighbors')
+    parser.add_argument('--M', type=int, default=16, help='Avg number of neighbors')
+    parser.add_argument('--M0', type=int, default=32, help='Avg number of neighbors')
     parser.add_argument('--dim', type=int, default=2, help='Dimensionality of synthetic data (ignored for SIFT).')
     parser.add_argument('--k', type=int, default=5, help='Number of nearest neighbors to search in the test stage')
     parser.add_argument('--ef', type=int, default=10, help='Size of the beam for beam search.')
@@ -106,21 +106,20 @@ def main():
 
     args = parser.parse_args()
 
-    vecs = read_fbin(args.dataset)[:1000]
+    vecs = read_fbin(args.dataset)[:1000000]
 
     # Create HNSW
 
-    #hnsw = HNSW(distance_func=l2_distance, m=args.M, m0=args.M0, ef=args.ef, ef_construction=args.ef_construction,
-    #            neighborhood_construction=heuristic)
-#
-    ## Add data to HNSW
-    #for x in tqdm(vecs):
-    #    hnsw.add(x)
+    hnsw = HNSW(distance_type='l2', m=args.M, m0=args.M0, ef=args.ef)
 
-    with open('hnsw_10000.pickle', 'rb') as fout:
-        hnsw = pickle.load(fout)
+    # Add data to HNSW
+    for x in tqdm(vecs):
+        hnsw.add(x)
 
-    #with open('haaa.pickle', 'wb') as fout:
+    #with open('hnsw_1m.pickle', 'rb') as fout:
+    #    hnsw = pickle.load(fout)
+
+    #with open('hnsw_1m.pickle', 'wb') as fout:
     #    pickle.dump(hnsw, fout)
 
     start = time.time()

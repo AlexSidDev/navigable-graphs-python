@@ -66,7 +66,7 @@ def recursive_heuristic(candidates, curr, k, distance_func, data, call_count=0):
         if len(result) >= k:
             break
 
-    if len(result) < k and skipped and call_count < 3:
+    if len(result) < k and skipped and call_count < 2:
         result += recursive_heuristic(skipped, curr, k - len(result), distance_func, data, call_count=call_count + 1)
 
     return result
