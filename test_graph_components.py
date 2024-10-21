@@ -75,16 +75,16 @@ def find_components(graph: HNSW):
         components.append([])
         candidates = [next(iter(verts))]
         while candidates:
-            new_candidates = []
+            new_candidates = set()
             verts.difference_update(candidates)
             for vert in candidates:
                 for level in levels:
                     neighbours = level.get(vert, None)
                     if neighbours is not None:
-                        new_candidates.extend(filter_verts(neighbours, verts))
+                        new_candidates.update(filter_verts(neighbours, verts))
 
             components[num_components].extend(candidates)
-            candidates = new_candidates
+            candidates = list(new_candidates)
 
         num_components += 1
 
@@ -102,30 +102,36 @@ def main():
     parser.add_argument('--k', type=int, default=5, help='Number of nearest neighbors to search in the test stage')
     parser.add_argument('--ef', type=int, default=10, help='Size of the beam for beam search.')
     parser.add_argument('--ef_construction', type=int, default=64, help='Size of the beam for beam search.')
-    parser.add_argument('--m', type=int, default=32, help='Number of random entry points.')
+    parser.add_argument('--m', type=int, default=3, help='Number of random entry points.')
 
     args = parser.parse_args()
 
-    vecs = read_fbin(args.dataset)
+    vecs = read_fbin(args.dataset)[:1000]
 
     # Create HNSW
 
-    hnsw = HNSW(distance_func=l2_distance, m=args.M, m0=args.M0, ef=args.ef, ef_construction=args.ef_construction,
-                neighborhood_construction=heuristic)
+    #hnsw = HNSW(distance_func=l2_distance, m=args.M, m0=args.M0, ef=args.ef, ef_construction=args.ef_construction,
+    #            neighborhood_construction=heuristic)
+#
+    ## Add data to HNSW
+    #for x in tqdm(vecs):
+    #    hnsw.add(x)
 
-    # Add data to HNSW
-    for x in tqdm(vecs):
-        hnsw.add(x)
-
-    #with open('hnsw_1000.pickle', 'rb') as fout:
-    #    hnsw = pickle.load(fout)
+    with open('hnsw_10000.pickle', 'rb') as fout:
+        hnsw = pickle.load(fout)
 
     #with open('haaa.pickle', 'wb') as fout:
     #    pickle.dump(hnsw, fout)
 
     start = time.time()
     num_components, components = find_components_separate(hnsw)
-    print('Количество компонент для каждого уровня: ', num_components[::-1])
+    print('Количество компонент для каждого уровня:', num_components[::-1])
+
+    print('Время выполнения:', time.time() - start, 'с')
+
+    start = time.time()
+    num_components, components = find_components(hnsw)
+    print('Количество компонент в \"плоском\" графе:', num_components)
 
     print('Время выполнения:', time.time() - start, 'с')
 

@@ -5,6 +5,7 @@ import time
 import random
 from math import log2
 from heapq import heapify, heappop, heappush, heapreplace, nlargest, nsmallest
+from sklearn.cluster import KMeans
 
 
 def l2_distance(a, b):
@@ -12,20 +13,62 @@ def l2_distance(a, b):
 
 
 def heuristic(candidates, curr, k, distance_func, data):
+    if len(candidates) < k:
+        return candidates
     candidates = sorted(candidates, key=lambda a: a[1])
     result_indx_set = {candidates[0][0]}
     result = [candidates[0]]
+    added_data = [data[candidates[0][0]]]
+    for c, curr_dist in candidates[1:]:
+        c_data = data[c]
+        if curr_dist < min(map(lambda a: distance_func(c_data, a), added_data)):
+            result.append((c, curr_dist))
+            result_indx_set.add(c)
+            added_data.append(c_data)
+    for c, curr_dist in candidates:  # optional. uncomment to build neighborhood exactly with k elements.
+        if len(result) < k and (c not in result_indx_set):
+            result.append((c, curr_dist))
+
+    return result
+
+
+def knn_centroids(candidates, curr, k, distance_func, data):
+    if len(candidates) < k:
+        return candidates
+    result = []
+    clustering = KMeans(k)
+    vectors = [data[candidate[0]] for candidate in candidates]
+    clustering.fit(vectors)
+    centers = clustering.cluster_centers_
+    for i, vector in enumerate(vectors):
+        if (vector == centers).sum() > 0:
+            result.append(candidates[i])
+    return result
+
+
+def recursive_heuristic(candidates, curr, k, distance_func, data, call_count=0):
+    if len(candidates) < k:
+        return candidates
+    if call_count == 0:
+        candidates = sorted(candidates, key=lambda a: a[1])
+    result_indx_set = {candidates[0][0]}
+    result = [candidates[0]]
     added_data = [ data[candidates[0][0]] ]
+    skipped = []
     for c, curr_dist in candidates[1:]:
         c_data = data[c]       
         if curr_dist < min(map(lambda a: distance_func(c_data, a), added_data)):
-            result.append( (c, curr_dist))
+            result.append((c, curr_dist))
             result_indx_set.add(c)
             added_data.append(c_data)
-    for c, curr_dist in candidates: # optional. uncomment to build neighborhood exactly with k elements.
-        if len(result) < k and (c not in result_indx_set):
-            result.append( (c, curr_dist) )
-    
+        else:
+            skipped.append((c, curr_dist))
+        if len(result) >= k:
+            break
+
+    if len(result) < k and skipped and call_count < 3:
+        result += recursive_heuristic(skipped, curr, k - len(result), distance_func, data, call_count=call_count + 1)
+
     return result
 
 
@@ -59,7 +102,7 @@ class HNSW:
         self._ef = ef
         self._ef_construction = ef_construction
         self._m0 = 2 * m if m0 is None else m0
-        self._level_mult = 1 / log2(m)
+        self._level_mult = 1 / log2(m // 10)
         self._graphs = []
         self._enter_point = None
 
