@@ -106,7 +106,7 @@ def main():
 
     args = parser.parse_args()
 
-    vecs = read_fbin(args.dataset)#[:1000000]
+    vecs = read_fbin(args.dataset)
 
     # Create HNSW
 
@@ -116,15 +116,9 @@ def main():
     for x in tqdm(vecs):
         hnsw.add(x)
 
-    #with open('hnsw_1m.pickle', 'rb') as fout:
-    #    hnsw = pickle.load(fout)
-
-    with open('hnsw_10m_ef_64.pickle', 'wb') as fout:
-        pickle.dump(hnsw, fout)
-
     start = time.time()
     num_components, components = find_components_separate(hnsw)
-    print('Количество компонент для каждого уровня:', num_components[::-1])
+    print('Количество компонент для каждого уровня:', num_components)
 
     print('Время выполнения:', time.time() - start, 'с')
 

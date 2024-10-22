@@ -105,18 +105,14 @@ def main():
 
     # Create HNSW
 
-    hnsw = HNSW( distance_func=l2_distance, m=args.M, m0=args.M0, ef=10, ef_construction=30,
-                 neighborhood_construction=heuristic)
+    hnsw = HNSW(distance_func=l2_distance, m=args.M, m0=args.M0, ef=10, ef_construction=30,
+                neighborhood_construction=heuristic)
 
     # Add data to HNSW
     for x in tqdm(train_data):
         hnsw.add(x)
-#
-    #with open('hnsw_my_non_diff.pickle', 'wb') as fout:
-    #    pickle.dump(hnsw, fout)
 
-    #with open('hnsw_base.pickle', 'rb') as fout:
-    #    hnsw = pickle.load(fout)
+    print(len(hnsw._graphs))
 
     # Calculate recall
     recalls = []
@@ -128,22 +124,10 @@ def main():
         avg_cals.append(avg_cal)
         print(f"Average recall: {recall}, avg calc: {avg_cal}")
 
-    with open('recalls_my_div_10_recursive_2.txt', 'w') as fout:
+    with open('recalls_my_recursive_3_prune.txt', 'w') as fout:
         print(recalls, file=fout)
-    with open('avg_cals_my_div_10_recursive_2.txt', 'w') as fout:
+    with open('avg_cals_my_recursive_3_prune.txt', 'w') as fout:
         print(avg_cals, file=fout)
-
-    #fig, axes = plt.subplots(1, 2, figsize=(25, 5))
-#
-    #axes[0].plot(efs, recalls)
-    #axes[0].set_xlabel('EF')
-    #axes[0].set_ylabel('Recall')
-#
-    #axes[1].plot(efs, avg_cals)
-    #axes[1].set_xlabel('EF')
-    #axes[1].set_ylabel('Avg Calls')
-#
-    #plt.show()
 
 
 if __name__ == "__main__":

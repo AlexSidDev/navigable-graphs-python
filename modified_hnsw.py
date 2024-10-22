@@ -32,20 +32,6 @@ def heuristic(candidates, curr, k, distance_func, data):
     return result
 
 
-def knn_centroids(candidates, curr, k, distance_func, data):
-    if len(candidates) < k:
-        return candidates
-    result = []
-    clustering = KMeans(k)
-    vectors = [data[candidate[0]] for candidate in candidates]
-    clustering.fit(vectors)
-    centers = clustering.cluster_centers_
-    for i, vector in enumerate(vectors):
-        if (vector == centers).sum() > 0:
-            result.append(candidates[i])
-    return result
-
-
 def recursive_heuristic(candidates, curr, k, distance_func, data, call_count=0):
     if len(candidates) < k:
         return candidates
@@ -69,6 +55,11 @@ def recursive_heuristic(candidates, curr, k, distance_func, data, call_count=0):
     if len(result) < k and skipped and call_count < 3:
         result += recursive_heuristic(skipped, curr, k - len(result), distance_func, data, call_count=call_count + 1)
 
+    return result
+
+
+def recursive_heuristic_wrapper(candidates, curr, k, distance_func, data):
+    result = recursive_heuristic(candidates, curr, k, distance_func, data)
     return result
 
 
@@ -105,6 +96,7 @@ class HNSW:
         self._level_mult = 1 / log2(m)
         self._graphs = []
         self._enter_point = None
+        self._min_dist = np.inf
 
     def add(self, elem, ef=None):
 
@@ -160,6 +152,7 @@ class HNSW:
             # for all new levels, we create an empty graph
             graphs.append({idx: []})
             self._enter_point = idx
+            self._min_dist = np.inf
             
     # can be used for search after jump        
     def search(self, q, k=1, ef=10, level=0, return_observed=True):
