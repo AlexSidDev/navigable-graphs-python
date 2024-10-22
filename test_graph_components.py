@@ -41,7 +41,7 @@ def filter_verts(candidates, verts):
 
 def find_components_separate(graph: HNSW):
     levels = graph._graphs[::-1]
-    components = [[]] * len(levels)
+    components = [[] for _ in range(len(levels))]
     num_components = [0] * len(levels)
 
     for ind, level in enumerate(levels):
@@ -106,11 +106,11 @@ def main():
 
     args = parser.parse_args()
 
-    vecs = read_fbin(args.dataset)[:1000000]
+    vecs = read_fbin(args.dataset)#[:1000000]
 
     # Create HNSW
 
-    hnsw = HNSW(distance_type='l2', m=args.M, m0=args.M0, ef=args.ef)
+    hnsw = HNSW(distance_type='l2', m=args.M, m0=args.M0, ef=args.ef_construction)
 
     # Add data to HNSW
     for x in tqdm(vecs):
@@ -119,8 +119,8 @@ def main():
     #with open('hnsw_1m.pickle', 'rb') as fout:
     #    hnsw = pickle.load(fout)
 
-    #with open('hnsw_1m.pickle', 'wb') as fout:
-    #    pickle.dump(hnsw, fout)
+    with open('hnsw_10m_ef_64.pickle', 'wb') as fout:
+        pickle.dump(hnsw, fout)
 
     start = time.time()
     num_components, components = find_components_separate(hnsw)
